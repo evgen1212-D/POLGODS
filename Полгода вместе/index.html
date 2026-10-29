@@ -1,0 +1,481 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>Полгода вместе</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;1,500&family=Marck+Script&family=Manrope:wght@400;500;700&display=swap">
+<style>
+/* Layout: одна ночная сцена со звёздным небом, внутри пять страниц-остановок.
+   Сверху точки и «назад», снизу «дальше». Единственный громкий жест: огромное курсивное «Полгода». */
+:root{
+  --bg:#120a1f; --bg2:#231238; --fg:#f7eaf0; --muted:#bba6c8;
+  --rose:#ff6b8b; --gold:#f2c879; --card:rgba(255,255,255,.06); --line:rgba(255,255,255,.14);
+  --ok:#7be0a8; --bad:#ff9a9a;
+  --display:'Playfair Display',Georgia,'Times New Roman',serif;
+  --hand:'Marck Script','Segoe Script','Comic Sans MS',cursive;
+  --body:'Manrope',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:var(--body); font-size:16px; line-height:1.55; color:var(--fg);
+  background-color:var(--bg);
+  background-image:radial-gradient(ellipse at 20% 0%,var(--bg2) 0%,transparent 60%),radial-gradient(ellipse at 90% 100%,#3a1236 0%,transparent 55%);
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+  padding-block:0; overflow:hidden;
+}
+#stars,#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none}
+#stars{z-index:0}
+#confetti{z-index:20}
+#hearts{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.heart{position:absolute;bottom:-40px;color:var(--rose);opacity:0;animation:rise linear forwards;will-change:transform}
+@keyframes rise{
+  0%{transform:translate(0,0) scale(.6);opacity:0}
+  10%{opacity:.75}
+  100%{transform:translate(var(--dx),-110vh) scale(1.1);opacity:0}
+}
+#app{position:relative;z-index:2;height:100%;max-width:720px;margin:0 auto;display:flex;flex-direction:column}
+.top{display:flex;align-items:center;gap:12px;padding:12px 0 6px}
+.icon-btn{
+  appearance:none;border:1px solid var(--line);background:var(--card);color:var(--fg);
+  height:40px;padding:0 14px;border-radius:999px;font:500 14px var(--body);cursor:pointer;
+}
+.icon-btn:disabled{opacity:.35;cursor:default}
+.dots{display:flex;gap:8px;margin-left:auto}
+.dot{appearance:none;border:0;padding:0;width:12px;height:12px;border-radius:50%;background:var(--line);cursor:pointer;transition:transform .3s,background .3s}
+.dot.on{background:var(--rose);transform:scale(1.35)}
+.dot.seen{background:var(--gold)}
+.dot:disabled{opacity:.35;cursor:default}
+button:focus-visible,label:focus-within{outline:2px solid var(--gold);outline-offset:2px}
+
+.stage{position:relative;flex:1;min-height:0;overflow:hidden}
+.page{
+  position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;padding:14px 2px 28px;
+  opacity:0;visibility:hidden;transform:translateX(44px);
+  transition:opacity .5s ease,transform .5s ease,visibility 0s .5s;
+}
+.page.before{transform:translateX(-44px)}
+.page.active{opacity:1;visibility:visible;transform:none;transition:opacity .5s ease,transform .5s ease}
+.eyebrow{font:700 12px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin:0 0 14px}
+h1,h2{font-family:var(--display);font-weight:600;margin:0;text-wrap:balance;line-height:1.02}
+h1{font-size:clamp(3.4rem,17vw,7rem);font-style:italic;font-weight:500}
+h1 span{display:block;color:var(--rose)}
+h2{font-size:clamp(2rem,8vw,3rem);font-style:italic;font-weight:500;margin-bottom:8px}
+.lead{max-width:34rem;color:var(--muted);margin:18px 0 0}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:28px 0 8px;max-width:30rem}
+.stat{border-top:1px solid var(--line);padding-top:10px}
+.stat b{display:block;font:600 clamp(1.7rem,8vw,2.6rem) var(--display);font-variant-numeric:tabular-nums;color:var(--fg)}
+.stat small{color:var(--muted);font-size:12px;letter-spacing:.06em;text-transform:uppercase}
+.range{margin-top:22px;font:400 1.35rem var(--hand);color:var(--gold)}
+
+.btn{
+  appearance:none;border:0;border-radius:999px;padding:13px 24px;font:700 15px var(--body);cursor:pointer;
+  background:var(--rose);color:#2a0716;transition:transform .2s,filter .2s;
+}
+.btn:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.08)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.ghost{background:transparent;color:var(--fg);border:1px solid var(--line)}
+.bottom{display:flex;justify-content:flex-end;gap:12px;align-items:center;padding:8px 0 10px}
+.bottom .hint{margin-right:auto;color:var(--muted);font-size:13px}
+
+/* timeline */
+.moments{list-style:none;margin:22px 0 0;padding:0;display:grid;gap:18px;border-left:1px solid var(--line);padding-left:20px}
+.moment{position:relative;min-width:0}
+.moment::before{content:"";position:absolute;left:-26px;top:7px;width:11px;height:11px;border-radius:50%;background:var(--rose);box-shadow:0 0 0 4px rgba(255,107,139,.2)}
+.moment time{font:400 1.3rem var(--hand);color:var(--gold)}
+.moment h3{margin:0 0 2px;font:600 1.15rem var(--display)}
+.moment p{margin:0;color:var(--muted);max-width:32rem}
+.photo{position:relative;display:block;margin:14px 0 4px;width:min(15rem,100%);padding:8px 8px 8px;border-radius:4px;background:#fbf1ea;box-shadow:0 14px 34px rgba(0,0,0,.5);cursor:pointer;transition:transform .35s;transform:rotate(-2deg)}
+.moment:nth-child(even) .photo{transform:rotate(1.8deg)}
+.photo:hover{transform:rotate(0) scale(1.02)}
+.photo.wide{width:min(19rem,100%)}
+.photo input{position:absolute;opacity:0;width:1px;height:1px}
+.photo img{width:100%;height:auto;display:block;border-radius:2px}
+.photo .swap{display:block;text-align:center;color:#8a5a73;font:400 1rem var(--hand);padding-top:6px}
+
+/* reasons */
+.reasons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:22px}
+.reason{
+  appearance:none;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--fg);
+  border-radius:12px;padding:14px;font:inherit;cursor:pointer;min-height:104px;min-width:0;
+  display:flex;flex-direction:column;gap:6px;transition:border-color .3s,background .3s;
+}
+.reason strong{font:600 1.1rem var(--display);font-style:italic}
+.reason span{color:var(--muted);font-size:14px;max-height:0;opacity:0;overflow:hidden;transition:max-height .4s,opacity .4s}
+.reason .tap{color:var(--rose);font-size:20px;line-height:1}
+.reason[aria-expanded="true"]{border-color:var(--rose);background:rgba(255,107,139,.1)}
+.reason[aria-expanded="true"] span{max-height:140px;opacity:1}
+.reason[aria-expanded="true"] .tap{display:none}
+.counter-note{margin-top:16px;color:var(--muted);font-size:13px}
+
+/* quiz */
+.qwrap{margin-top:20px;max-width:34rem}
+.qprog{display:flex;gap:6px;margin-bottom:16px}
+.qprog i{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.qprog i.done{background:var(--gold)}
+.qprog i.cur{background:var(--rose)}
+.qtext{font:600 clamp(1.3rem,5.5vw,1.8rem) var(--display);margin:0 0 16px;text-wrap:balance}
+.opts{display:grid;gap:10px}
+.opt{
+  appearance:none;text-align:left;border:1px solid var(--line);background:var(--card);color:var(--fg);
+  border-radius:12px;padding:13px 16px;font:500 15px var(--body);cursor:pointer;transition:transform .2s,border-color .2s,background .2s;
+}
+.opt:hover:not(:disabled){border-color:var(--rose);transform:translateX(3px)}
+.opt:disabled{cursor:default}
+.opt.ok{border-color:var(--ok);background:rgba(123,224,168,.14)}
+.opt.bad{border-color:var(--bad);background:rgba(255,154,154,.12);animation:shake .35s}
+.opt.dim{opacity:.5}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.fb{min-height:3.2em;margin:14px 0 0;color:var(--muted)}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.qnext{margin-top:10px}
+.score{font:italic 500 clamp(2.4rem,12vw,4rem) var(--display);color:var(--rose);margin:0}
+
+/* finale */
+.envelope{
+  appearance:none;display:block;margin:26px 0 0;border:0;padding:0;background:none;cursor:pointer;width:min(320px,100%);
+  color:inherit;font:inherit;
+}
+.env-body{position:relative;aspect-ratio:3/2;border-radius:10px;background:linear-gradient(160deg,#4a1c3f,#2b1233);border:1px solid var(--line);overflow:hidden}
+.env-body::before,.env-body::after{content:"";position:absolute;top:0;width:51%;height:100%;background:rgba(255,255,255,.04)}
+.env-body::before{left:0;clip-path:polygon(0 0,100% 50%,0 100%)}
+.env-body::after{right:0;clip-path:polygon(100% 0,0 50%,100% 100%)}
+.env-flap{position:absolute;left:0;right:0;top:0;height:58%;background:#5a2348;clip-path:polygon(0 0,100% 0,50% 100%);transform-origin:top;transition:transform .7s}
+.seal{position:absolute;left:50%;top:50%;translate:-50% -50%;color:var(--rose);font-size:34px;z-index:2;transition:opacity .4s}
+.envelope-cap{display:block;margin-top:10px;color:var(--muted);font-size:14px}
+.opened .env-flap{transform:rotateX(180deg)}
+.opened .seal{opacity:0}
+.letter{
+  margin:22px 0 0;padding:clamp(18px,5vw,30px);border-radius:6px;max-width:34rem;
+  background:#fbf1ea;color:#3a1830;box-shadow:0 18px 50px rgba(0,0,0,.45);
+  font:400 clamp(1.25rem,5vw,1.55rem)/1.45 var(--hand);
+  animation:unfold .8s ease both;
+}
+.letter p{margin:0 0 .8em}
+.letter .sign{margin:0;color:#b0204a;font-size:1.15em}
+@keyframes unfold{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.secret{margin-top:20px;max-width:34rem;padding:18px;border:1px solid var(--gold);border-radius:12px;background:rgba(242,200,121,.08);animation:unfold .8s ease both}
+.secret b{display:block;font:700 12px var(--body);letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.secret p{margin:0;font:italic 500 1.25rem/1.4 var(--display)}
+.row{display:flex;flex-wrap:wrap;gap:12px;margin-top:18px}
+@media (max-width:420px){.reasons{grid-template-columns:1fr}.reason{min-height:0}}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01s!important;transition-duration:.01s!important}
+  .heart{display:none}
+}
+</style>
+
+<canvas id="stars" aria-hidden="true"></canvas>
+<div id="hearts" aria-hidden="true"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<div id="app">
+  <header class="top">
+    <button class="icon-btn" id="back" type="button">← Назад</button>
+    <nav class="dots" id="dots" aria-label="Страницы"></nav>
+  </header>
+
+  <main class="stage">
+    <!-- 1 -->
+    <section class="page" aria-label="Начало">
+      <p class="eyebrow">29 октября · 2026</p>
+      <h1>Полгода<span>вместе</span></h1>
+      <p class="lead">Я собрал для тебя маленькое приключение: пять остановок, один квиз, письмо и секрет. Листай кнопкой внизу или стрелками на клавиатуре.</p>
+      <div class="stats">
+        <div class="stat"><b id="sDays">0</b><small>дней</small></div>
+        <div class="stat"><b id="sWeeks">0</b><small>недель</small></div>
+        <div class="stat"><b id="sHours">0</b><small>часов</small></div>
+      </div>
+      <div class="range">с 29 апреля — и дальше</div>
+    </section>
+
+    <!-- 2 -->
+    <section class="page" aria-label="Наши моменты">
+      <p class="eyebrow">Глава I</p>
+      <h2>Наши моменты</h2>
+      <p class="lead" style="margin-top:6px">Нажми на любую фотографию, чтобы заменить её своей.</p>
+      <ol class="moments">
+        <li class="moment"><time>29 апреля</time><h3>С чего всё началось</h3><p>С этого дня всё стало немного теплее. Отсюда мы и считаем.</p>
+          <label class="photo" for="ph1"><input id="ph1" type="file" accept="image/*"><img src="img/bear.jpg" alt="Мы на диване рядом с белым мишкой"><span class="swap">вечера с мишкой</span></label></li>
+        <li class="moment"><time>Первые недели</time><h3>Разговоры обо всём</h3><p>О важном и о ерунде. Время летело так, что мы не успевали его замечать.</p>
+          <label class="photo wide" for="ph2"><input id="ph2" type="file" accept="image/*"><img src="img/chat.jpg" alt="Переписка: люблю, взаимно"><span class="swap">«Люблю» и «взаимно»</span></label></li>
+        <li class="moment"><time>Всё лето</time><h3>Наши шутки</h3><p>Те, которые понятны только нам двоим и больше никому на свете.</p>
+          <label class="photo" for="ph3"><input id="ph3" type="file" accept="image/*"><img src="img/laugh.jpg" alt="Мы смеёмся"><span class="swap">смеёмся без причины</span></label></li>
+        <li class="moment"><time>Сегодня</time><h3>Шесть месяцев</h3><p>И каждый новый день с тобой остаётся особенным.</p>
+          <label class="photo" for="ph4"><input id="ph4" type="file" accept="image/*"><img src="img/kiss.jpg" alt="Мы вместе, поцелуй в щёку"><span class="swap">мы сегодня</span></label></li>
+      </ol>
+    </section>
+
+    <!-- 3 -->
+    <section class="page" aria-label="Что я люблю">
+      <p class="eyebrow">Глава II</p>
+      <h2>Что я в тебе люблю</h2>
+      <p class="lead" style="margin-top:6px">Здесь шесть причин. Нажимай, чтобы открыть каждую.</p>
+      <div class="reasons" id="reasons"></div>
+      <p class="counter-note" id="rNote">Открыто: 0 из 6</p>
+    </section>
+
+    <!-- 4 -->
+    <section class="page" aria-label="Квиз">
+      <p class="eyebrow">Глава III</p>
+      <h2>Маленький квиз</h2>
+      <div class="qwrap" id="quiz"></div>
+    </section>
+
+    <!-- 5 -->
+    <section class="page" aria-label="Финал">
+      <p class="eyebrow">Финал</p>
+      <h2>Тебе письмо</h2>
+      <button class="envelope" id="env" type="button" aria-label="Открыть письмо">
+        <span class="env-body"><span class="env-flap"></span><span class="seal">♥</span></span>
+        <span class="envelope-cap" id="envCap">Нажми, чтобы открыть</span>
+      </button>
+      <div id="letterBox"></div>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <span class="hint" id="hint"></span>
+    <button class="btn" id="next" type="button">Дальше →</button>
+  </footer>
+</div>
+
+<script>
+(function(){
+  /* ---------- Настройки: меняй под себя ---------- */
+  var START = new Date(2026, 3, 29); // 29 апреля 2026 (месяцы с нуля)
+  var REASONS = [
+    ['Улыбка','От неё у меня сразу улучшается любой день.'],
+    ['Голос','Могу слушать его хоть всю ночь.'],
+    ['Забота','Ты замечаешь то, о чём я даже не успел сказать.'],
+    ['Смех','Он заразительный, и я каждый раз не могу не смеяться вместе с тобой.'],
+    ['Смелость','С тобой хочется пробовать новое.'],
+    ['Тепло','Рядом с тобой всегда спокойно и уютно.']
+  ];
+  var QUIZ = [
+    {q:'Сколько мы вместе сегодня?', a:['Месяц','Три месяца','Полгода','Целый год'], c:2,
+     ok:'Верно. Ровно полгода, а кажется, что целая жизнь в хорошем смысле.', bad:'Почти. Посчитай ещё раз: сегодня 29 октября, а начали мы 29 апреля.'},
+    {q:'Сколько это примерно дней?', a:['90','183','250','365'], c:1,
+     ok:'Да, 183 дня. И каждый из них был не зря.', bad:'Не совсем. Подсказка: чуть больше ста восьмидесяти.'},
+    {q:'О чём я думаю чаще всего?', a:['О погоде','О еде','О тебе','О работе'], c:2,
+     ok:'Конечно, о тебе. Еда на втором месте, но с большим отрывом.', bad:'Холодно. Подумай о том, кто сейчас читает эту страницу.'},
+    {q:'Что мы будем делать дальше?', a:['Остановимся','Ещё полгода, потом ещё','Подождём понедельника','Пока не решили'], c:1,
+     ok:'Именно так. Продолжать, и как можно дольше.', bad:'Нет, мой план другой. Он про то, что будет ещё очень много страниц.'}
+  ];
+
+  var $=function(s,r){return (r||document).querySelector(s)};
+  var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  var pages=$$('.page'), idx=0, quizDone=false, seen={0:true}, QUIZ_PAGE=3;
+  var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---------- Навигация ---------- */
+  var dotsEl=$('#dots'), nextBtn=$('#next'), backBtn=$('#back'), hint=$('#hint');
+  var dots=pages.map(function(p,i){
+    var b=document.createElement('button'); b.type='button'; b.className='dot';
+    b.setAttribute('aria-label','Страница '+(i+1)); b.addEventListener('click',function(){go(i)});
+    dotsEl.appendChild(b); return b;
+  });
+  function allowed(n){return n<=QUIZ_PAGE||quizDone}
+  function go(n){
+    if(n<0||n>=pages.length||n===idx||!allowed(n)) return;
+    idx=n; seen[n]=true;
+    pages.forEach(function(p,i){
+      p.classList.toggle('active',i===n); p.classList.toggle('before',i<n);
+      if('inert' in p) p.inert=(i!==n);
+    });
+    pages[n].scrollTop=0; sync();
+  }
+  function sync(){
+    dots.forEach(function(d,i){
+      d.classList.toggle('on',i===idx); d.classList.toggle('seen',i!==idx&&!!seen[i]);
+      d.disabled=!allowed(i);
+    });
+    backBtn.disabled=idx===0;
+    var last=idx===pages.length-1;
+    nextBtn.hidden=last;
+    var locked=(idx===QUIZ_PAGE&&!quizDone);
+    nextBtn.disabled=locked;
+    hint.textContent=locked?'Ответь на все вопросы, чтобы идти дальше':'';
+    nextBtn.textContent=idx===0?'Начать путь →':'Дальше →';
+  }
+  nextBtn.addEventListener('click',function(){go(idx+1)});
+  backBtn.addEventListener('click',function(){go(idx-1)});
+  document.addEventListener('keydown',function(e){
+    if(e.altKey||e.ctrlKey||e.metaKey) return;
+    if(e.key==='ArrowRight') go(idx+1);
+    else if(e.key==='ArrowLeft') go(idx-1);
+  });
+  pages.forEach(function(p,i){ if('inert' in p) p.inert=(i!==0); });
+  pages[0].classList.add('active');
+
+  /* ---------- Счётчик ---------- */
+  var now=new Date(), today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  var days=Math.max(0,Math.round((today-START)/86400000));
+  function countUp(el,to){
+    if(reduce){el.textContent=to;return}
+    var t0=performance.now(),dur=1400;
+    (function tick(t){
+      var k=Math.min(1,(t-t0)/dur); el.textContent=Math.round(to*(1-Math.pow(1-k,3)));
+      if(k<1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  countUp($('#sDays'),days); countUp($('#sWeeks'),Math.floor(days/7)); countUp($('#sHours'),days*24);
+
+  /* ---------- Фото ---------- */
+  $$('.photo input').forEach(function(inp){
+    inp.addEventListener('change',function(){
+      var f=inp.files&&inp.files[0]; if(!f) return;
+      var r=new FileReader();
+      r.onload=function(){
+        var lab=inp.parentNode, old=$('img',lab); if(old) old.remove();
+        var im=new Image(); im.alt='Наше фото'; im.src=r.result;
+        lab.insertBefore(im,$('.swap',lab));
+      };
+      r.readAsDataURL(f);
+    });
+  });
+
+  /* ---------- Причины ---------- */
+  var opened=0, rWrap=$('#reasons');
+  REASONS.forEach(function(r,i){
+    var b=document.createElement('button'); b.type='button'; b.className='reason'; b.setAttribute('aria-expanded','false');
+    b.innerHTML='<strong></strong><span></span><em class="tap" style="font-style:normal">♥</em>';
+    $('strong',b).textContent=r[0]; $('span',b).textContent=r[1];
+    b.addEventListener('click',function(){
+      if(b.getAttribute('aria-expanded')==='false'){
+        b.setAttribute('aria-expanded','true'); opened++;
+        $('#rNote').textContent=opened===REASONS.length?'Открыто всё. А на самом деле причин гораздо больше.':'Открыто: '+opened+' из '+REASONS.length;
+      }
+    });
+    rWrap.appendChild(b);
+  });
+
+  /* ---------- Квиз ---------- */
+  var quizEl=$('#quiz'), qi=0, firstTry=0, missed=false;
+  function renderQ(){
+    var Q=QUIZ[qi]; missed=false;
+    var prog=QUIZ.map(function(_,i){return '<i class="'+(i<qi?'done':i===qi?'cur':'')+'"></i>'}).join('');
+    quizEl.innerHTML='<div class="qprog">'+prog+'</div><p class="qtext"></p><div class="opts"></div><p class="fb" role="status"></p><div class="qnext"></div>';
+    $('.qtext',quizEl).textContent=Q.q;
+    var box=$('.opts',quizEl), fb=$('.fb',quizEl);
+    Q.a.forEach(function(txt,i){
+      var b=document.createElement('button'); b.type='button'; b.className='opt'; b.textContent=txt;
+      b.addEventListener('click',function(){
+        if(i===Q.c){
+          $$('.opt',box).forEach(function(o){o.disabled=true; if(o!==b&&!o.classList.contains('bad')) o.classList.add('dim')});
+          b.classList.add('ok'); fb.className='fb ok'; fb.textContent=Q.ok;
+          if(!missed) firstTry++;
+          var nb=document.createElement('button'); nb.type='button'; nb.className='btn';
+          nb.textContent=qi===QUIZ.length-1?'Узнать результат':'Следующий вопрос';
+          nb.addEventListener('click',function(){ if(qi===QUIZ.length-1) finishQuiz(); else {qi++;renderQ()} });
+          $('.qnext',quizEl).appendChild(nb); nb.focus({preventScroll:true});
+          burst(8,b);
+        } else {
+          missed=true; b.disabled=true; b.classList.add('bad');
+          fb.className='fb bad'; fb.textContent=Q.bad;
+        }
+      });
+      box.appendChild(b);
+    });
+  }
+  function finishQuiz(){
+    quizDone=true;
+    var msg=firstTry===QUIZ.length?'Все ответы с первого раза. Ты знаешь меня лучше всех.':
+            firstTry>=QUIZ.length-1?'Почти идеально. Одна ошибка, и та милая.':
+            'Не всё с первого раза, но главное ты знаешь.';
+    quizEl.innerHTML='<p class="score">'+firstTry+' из '+QUIZ.length+'</p><p class="lead" style="margin-top:8px"></p><div class="row"><button class="btn" type="button" id="toFinal">К письму →</button></div>';
+    $('.lead',quizEl).textContent=msg;
+    $('#toFinal').addEventListener('click',function(){go(idx+1)});
+    sync(); confetti(70);
+  }
+  renderQ();
+
+  /* ---------- Письмо и секрет ---------- */
+  var env=$('#env'), letterOpen=false;
+  env.addEventListener('click',function(){
+    if(letterOpen) return; letterOpen=true;
+    env.classList.add('opened'); $('#envCap').textContent='Письмо открыто';
+    var box=$('#letterBox');
+    box.innerHTML='<article class="letter"><p>Даша, любимая,</p>'+
+      '<p>полгода назад обычный день стал началом чего-то очень важного. С тех пор у меня есть человек, к которому хочется возвращаться и которому хочется рассказывать всё. Рядом с тобой даже тишина уютная.</p>'+
+      '<p>Спасибо тебе за смех, за терпение, за тепло и за то, что ты просто есть.</p>'+
+      '<p>Я не знаю, что будет дальше, но точно знаю, что хочу ещё много страниц в этой истории. И чтобы почти на каждой была ты.</p>'+
+      '<p class="sign">С полугодием. С любовью.</p></article>'+
+      '<div class="row"><button class="btn" type="button" id="secretBtn">Открыть секрет</button></div><div id="secretBox"></div>';
+    $('#secretBtn').addEventListener('click',function(){
+      this.disabled=true;
+      $('#secretBox').innerHTML='<div class="secret"><b>Секрет</b><p>У меня есть для тебя ещё одно «спасибо», и оно не помещается в письмо. Скажу его лично и обниму.</p></div>';
+      confetti(260);
+      setTimeout(function(){pages[4].scrollTo({top:pages[4].scrollHeight,behavior:reduce?'auto':'smooth'})},200);
+    });
+    setTimeout(function(){var l=$('.letter'); if(l) l.scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})},300);
+  });
+
+  /* ---------- Звёзды ---------- */
+  var sc=$('#stars'), sx=sc.getContext('2d'), stars=[], W=0,H=0;
+  function sizeStars(){
+    var d=window.devicePixelRatio||1; W=window.innerWidth; H=window.innerHeight;
+    sc.width=W*d; sc.height=H*d; sx.setTransform(d,0,0,d,0,0);
+    var n=Math.round(W*H/7000); stars=[];
+    for(var i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.3+.3,p:Math.random()*6.28,s:Math.random()*1.4+.4});
+    drawStars(0);
+  }
+  function drawStars(t){
+    sx.clearRect(0,0,W,H);
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i], a=reduce?.7:.35+.65*Math.abs(Math.sin(s.p+t/1000*s.s));
+      sx.globalAlpha=a; sx.fillStyle=i%9===0?'#f2c879':'#ffffff';
+      sx.beginPath(); sx.arc(s.x,s.y,s.r,0,6.283); sx.fill();
+    }
+    sx.globalAlpha=1;
+  }
+  (function loop(t){ if(!reduce&&!document.hidden) drawStars(t); if(!reduce) requestAnimationFrame(loop); })(0);
+  window.addEventListener('resize',sizeStars); sizeStars();
+
+  /* ---------- Летающие сердечки ---------- */
+  var hl=$('#hearts');
+  function spawnHeart(){
+    if(reduce||document.hidden) return;
+    var h=document.createElement('span'); h.className='heart'; h.textContent='♥';
+    var size=10+Math.random()*18, dur=7+Math.random()*7;
+    h.style.left=(Math.random()*100)+'%'; h.style.fontSize=size+'px';
+    h.style.setProperty('--dx',((Math.random()-.5)*120)+'px');
+    h.style.animationDuration=dur+'s';
+    h.addEventListener('animationend',function(){h.remove()});
+    hl.appendChild(h);
+  }
+  setInterval(spawnHeart,650);
+
+  /* ---------- Конфетти ---------- */
+  var cc=$('#confetti'), cx=cc.getContext('2d'), parts=[], running=false;
+  var COLORS=['#ff6b8b','#f2c879','#ffffff','#c79bff','#ff9fb5'];
+  function sizeConf(){var d=window.devicePixelRatio||1;cc.width=innerWidth*d;cc.height=innerHeight*d;cx.setTransform(d,0,0,d,0,0)}
+  window.addEventListener('resize',sizeConf); sizeConf();
+  function confetti(n,ox,oy){
+    if(reduce) return;
+    var x=ox==null?innerWidth/2:ox, y=oy==null?innerHeight*.55:oy;
+    for(var i=0;i<n;i++){
+      var a=Math.random()*6.283, v=4+Math.random()*10;
+      parts.push({x:x,y:y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-5,g:.22,r:Math.random()*6.28,vr:(Math.random()-.5)*.4,
+        w:5+Math.random()*7,h:3+Math.random()*5,c:COLORS[i%COLORS.length],heart:Math.random()<.3,life:0});
+    }
+    if(!running){running=true;requestAnimationFrame(stepConf)}
+  }
+  function burst(n,el){var b=el.getBoundingClientRect();confetti(n,b.left+b.width/2,b.top+b.height/2)}
+  function stepConf(){
+    cx.clearRect(0,0,innerWidth,innerHeight);
+    parts=parts.filter(function(p){return p.y<innerHeight+30&&p.life<260});
+    parts.forEach(function(p){
+      p.vy+=p.g; p.vx*=.99; p.x+=p.vx; p.y+=p.vy; p.r+=p.vr; p.life++;
+      cx.save(); cx.translate(p.x,p.y); cx.rotate(p.r); cx.fillStyle=p.c; cx.globalAlpha=Math.max(0,1-p.life/260);
+      if(p.heart){cx.font=(p.w+6)+'px sans-serif';cx.textAlign='center';cx.fillText('♥',0,0)} else cx.fillRect(-p.w/2,-p.h/2,p.w,p.h);
+      cx.restore();
+    });
+    if(parts.length) requestAnimationFrame(stepConf); else {running=false;cx.clearRect(0,0,innerWidth,innerHeight)}
+  }
+
+  sync();
+})();
+</script>
+
+</body></html>
